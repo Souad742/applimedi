@@ -1,10 +1,10 @@
-pipeline {
+ pipeline {
     agent any
 
     environment {
         SONARQUBE_ENV  = 'SonarQube'                // Nom du serveur SonarQube déclaré dans Jenkins
         SCANNER_NAME   = 'SonarQube Scanner'        // Nom du scanner SonarQube installé dans Jenkins
-        PROJECT_KEY    = 'medi'                      // Nouveau projectKey SonarQube
+        PROJECT_KEY    = 'medi'         // projectKey SonarQube
         SONARQUBE_URL  = 'http://sonarqube:9000'    // URL du service SonarQube
     }
 
@@ -39,7 +39,7 @@ pipeline {
 
                     withSonarQubeEnv("${SONARQUBE_ENV}") {
 
-                        withCredentials([string(credentialsId: 'medi', variable: 'SONAR_TOKEN')]) {
+                        withCredentials([string(credentialsId: 'alpinehelloworld', variable: 'SONAR_TOKEN')]) {
 
                             sh """
 ${scannerHome}/bin/sonar-scanner \
@@ -51,3 +51,31 @@ ${scannerHome}/bin/sonar-scanner \
   -Dsonar.host.url=${SONARQUBE_URL}
 """
                         }
+                    }
+                }
+            }
+        }
+
+        stage('Build Python Project') {
+            steps {
+                echo '🔧 Compilation éventuelle (setup.py)...'
+                sh '''
+                    if [ -f setup.py ]; then
+                        python setup.py install
+                    else
+                        echo "Pas de setup.py, étape ignorée."
+                    fi
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline terminée avec succès.'
+        }
+        failure {
+            echo '❌ Échec de la pipeline.'
+        }
+    }
+}
